@@ -1,0 +1,69 @@
+# ============================
+# Large data — do NOT commit
+# ============================
+
+# Open Images: raw downloads and derived JSONLs
+openimages/
+openimages/*.jsonl
+openimages/train-images/
+openimages/train-masks/
+openimages/train-masks-*.done
+openimages/*.csv
+openimages/*.txt
+
+# iNaturalist
+inat/*.csv
+inat/*.csv.gz
+
+# Archives and bundles
+archive/
+archive.zip
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+
+# ============================
+# Model checkpoints and outputs
+# ============================
+checkpoints/
+*.pt
+*.ckpt
+*.safetensors
+
+# Generated artifacts
+class_map.json
+
+# ============================
+# Python
+# ============================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+*.egg
+
+# Virtual environments
+venv/
+env/
+.venv/
+.env/
+
+# ============================
+# Editor / OS
+# ============================
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# ============================
+# Modal local state
+# ============================
+.modal/
