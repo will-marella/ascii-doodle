@@ -127,13 +127,13 @@ def _inspect_remote(checkpoint: str):
 
 
 @app.local_entrypoint()
-def inspect(checkpoint: str = "/data/checkpoints/v2_humans/step_19000.pt"):
+def inspect(checkpoint: str = "/data/checkpoints/v3_maskgit/step_19000.pt"):
     """Generate samples from a trained checkpoint under multiple decoding configs.
 
     Runs on a Modal A10G, which is ~10-20x faster than local CPU for sampling.
 
     Args:
-        checkpoint: path inside the Modal volume. Default: latest v2 run's final ckpt.
+        checkpoint: path inside the Modal volume. Default: latest v3 run's final ckpt.
     """
     _inspect_remote.remote(checkpoint)
 
@@ -157,13 +157,13 @@ def _probe_remote(checkpoint: str, n_samples: int):
 
 @app.local_entrypoint()
 def probe(
-    checkpoint: str = "/data/checkpoints/v2_humans/step_19000.pt",
+    checkpoint: str = "/data/checkpoints/v3_maskgit/step_19000.pt",
     n_samples: int = 3,
 ):
-    """Prefix-priming diagnostic: does real context help the model produce better output?
+    """Partial-visibility diagnostic: does the MaskGIT model fill in missing regions?
 
-    For each of `n_samples` real training examples, runs generation at multiple
-    prefix lengths (0, 4, 8, 16, 24 rows) and prints all continuations.
+    For each of `n_samples` real training examples, runs several visibility
+    scenarios (top/bottom/left/random) and prints the infilled results.
 
     Args:
         checkpoint: path inside the Modal volume.

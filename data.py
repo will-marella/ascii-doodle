@@ -13,7 +13,9 @@ import torch
 from torch.utils.data import Dataset
 
 RAMP = ' "roy48Q'
-VOCAB_SIZE = len(RAMP)        # 8
+N_ASCII_TOKENS = len(RAMP)    # 8 real characters
+MASK_TOKEN = 8                # [MASK] sentinel for MaskGIT — input only, never a target
+VOCAB_SIZE = N_ASCII_TOKENS + 1  # 9 (includes MASK_TOKEN)
 GRID_H = 32
 GRID_W = 64
 SEQ_LEN = GRID_H * GRID_W     # 2048

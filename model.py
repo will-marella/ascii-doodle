@@ -1,10 +1,11 @@
-"""Autoregressive transformer for ASCII image generation.
+"""Bidirectional transformer for MaskGIT-style ASCII image generation.
 
-v2: unconditional (no class embedding). Default config:
-8 layers x 384 hidden x 6 heads (64/head) x 1536 FFN  ~ 14.2M params.
+v3: MaskGIT. Same architecture as v2 but with bidirectional self-attention
+(no causal mask) and vocab_size=9 to include the [MASK] input token.
 
-2D learned positional encoding (row + col), pre-LayerNorm, causal
-self-attention via F.scaled_dot_product_attention (flash attention on A100+).
+Default config: 8 layers x 384 hidden x 6 heads (64/head) x 1536 FFN  ~ 14.2M params.
+2D learned positional encoding (row + col), pre-LayerNorm, full attention
+via F.scaled_dot_product_attention.
 """
 
 import torch
@@ -38,7 +39,9 @@ class TransformerBlock(nn.Module):
         k = k.view(B, T, self.n_heads, self.head_dim).transpose(1, 2)
         v = v.view(B, T, self.n_heads, self.head_dim).transpose(1, 2)
 
-        attn = F.scaled_dot_product_attention(q, k, v, is_causal=True)
+        # Bidirectional attention (no causal mask) — this is the key
+        # architectural change from v1/v2 to v3.
+        attn = F.scaled_dot_product_attention(q, k, v, is_causal=False)
         attn = attn.transpose(1, 2).contiguous().view(B, T, D)
         x = x + self.out_proj(attn)
 
@@ -49,7 +52,7 @@ class TransformerBlock(nn.Module):
 class AsciiTransformer(nn.Module):
     def __init__(
         self,
-        vocab_size: int = 8,
+        vocab_size: int = 9,
         grid_h: int = 32,
         grid_w: int = 64,
         dim: int = 384,
@@ -69,7 +72,7 @@ class AsciiTransformer(nn.Module):
         self.row_emb = nn.Embedding(grid_h, dim)
         self.col_emb = nn.Embedding(grid_w, dim)
 
-        # Precomputed row/col index for every position in raster order
+        # Precomputed row/col index for every position
         positions = torch.arange(seq_len)
         self.register_buffer('row_idx', positions // grid_w, persistent=False)
         self.register_buffer('col_idx', positions % grid_w, persistent=False)

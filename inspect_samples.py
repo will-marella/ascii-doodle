@@ -1,13 +1,13 @@
-"""Load a trained checkpoint and generate samples under multiple sampling configs.
+"""Load a trained MaskGIT checkpoint and generate samples under several configs.
 
-Prints a side-by-side view of what each sampling strategy produces for a fixed
-number of unconditional samples. Use this to diagnose whether the trained model
-has more to offer under different decoding strategies.
+Prints samples produced by varying the iterative-decoding hyperparameters:
+number of unmasking steps, sampling temperature, and Gumbel noise scale. Use
+this to explore the decoding tradeoff space on a trained checkpoint.
 
-Usage (local, auto-detects device):
-    python inspect_samples.py --checkpoint checkpoints/v2_humans/step_19000.pt
+Usage (local):
+    python inspect_samples.py --checkpoint checkpoints/v3_maskgit/step_19000.pt
 
-Usage (via Modal, GPU-backed):
+Usage (Modal):
     modal run modal_app.py::inspect
 """
 
@@ -20,12 +20,12 @@ from model import AsciiTransformer
 from sample import decode, generate
 
 
-# (label, temperature, top_k). top_k=1 is effectively greedy decoding.
+# (label, n_steps, temperature, noise_temperature)
 SAMPLING_CONFIGS = [
-    ('greedy  (T=1.0 k=1)', 1.0, 1),
-    ('low-T   (T=0.3 k=5)', 0.3, 5),
-    ('default (T=0.8 k=3)', 0.8, 3),
-    ('high-T  (T=1.0 k=5)', 1.0, 5),
+    ('fast     (steps=8,  T=1.0, noise=4.5)',  8, 1.0, 4.5),
+    ('standard (steps=12, T=1.0, noise=4.5)', 12, 1.0, 4.5),
+    ('slow     (steps=24, T=1.0, noise=4.5)', 24, 1.0, 4.5),
+    ('sharp    (steps=12, T=0.7, noise=2.0)', 12, 0.7, 2.0),
 ]
 
 
@@ -33,6 +33,7 @@ def load_model(checkpoint_path: str, device: str):
     print(f'Loading checkpoint from {checkpoint_path}...')
     ckpt = torch.load(checkpoint_path, map_location=device, weights_only=False)
     config = ckpt['config']
+    version = ckpt.get('version', 'unknown')
 
     model = AsciiTransformer(
         vocab_size=VOCAB_SIZE,
@@ -43,7 +44,7 @@ def load_model(checkpoint_path: str, device: str):
     model.load_state_dict(ckpt['model'])
     model.eval()
 
-    print(f'  step {ckpt["step"]}, {model.num_params():,} params')
+    print(f'  step {ckpt["step"]}, {model.num_params():,} params, version={version}')
     return model
 
 
@@ -62,13 +63,19 @@ def main(argv=None):
     torch.manual_seed(args.seed)
     model = load_model(args.checkpoint, args.device)
 
-    for label, temperature, top_k in SAMPLING_CONFIGS:
+    for label, n_steps, temperature, noise_temp in SAMPLING_CONFIGS:
         print()
         print('=' * 80)
         print(f'  SAMPLING CONFIG: {label}')
         print('=' * 80)
 
-        sampled = generate(model, args.n_samples, temperature=temperature, top_k=top_k)
+        sampled = generate(
+            model,
+            n_samples=args.n_samples,
+            n_steps=n_steps,
+            temperature=temperature,
+            noise_temperature=noise_temp,
+        )
 
         for i in range(args.n_samples):
             print()
