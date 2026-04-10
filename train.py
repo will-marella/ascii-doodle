@@ -1,7 +1,6 @@
-"""Train the ASCII transformer."""
+"""Train the ASCII transformer (v2: unconditional, humans, mirror-augmented)."""
 
 import argparse
-import json
 import math
 import os
 import time
@@ -14,27 +13,16 @@ from data import (
     AsciiDataset,
     BG_TOKEN,
     VOCAB_SIZE,
-    build_class_map,
     load_jsonl_to_tensors,
 )
 from model import AsciiTransformer
 from sample import decode, generate
 
 
-# Curated sample classes for qualitative eval — chosen for visual diversity and
-# sample-count coverage. Each has >=1k training examples in the post-cc dataset.
-# Any name not in the loaded class_map is silently skipped, so this list is
-# robust to dataset regeneration.
-SAMPLE_CLASS_NAMES = [
-    'Girl',                 # 33,065 — human figure
-    'Car',                  # 15,527 — angular vehicle
-    'Flower',               #  5,515 — radial organic
-    'Dog',                  #  5,070 — quadruped
-    'Bird',                 #  3,450 — winged animal
-    'Guitar',               #  1,951 — elongated instrument
-    'Fixed-wing aircraft',  #  1,835 — elongated vehicle
-    'Cake',                 #  1,089 — compact food
-]
+# v2 data filter: four coherent "single human figure" classes from Open Images.
+# Excludes Person (often multi-figure) and Human body (scale inconsistency).
+FILTER_LABELS = frozenset({'Girl', 'Woman', 'Boy', 'Man'})
+
 
 # Optional callback invoked after every checkpoint save. Used by Modal to flush
 # the persistent volume so checkpoints survive crashes. None in local runs.
@@ -95,10 +83,9 @@ def evaluate(model, val_loader, loss_weight, device) -> float:
     model.eval()
     total = 0.0
     count = 0
-    for tokens, class_ids in val_loader:
+    for tokens in val_loader:
         tokens = tokens.to(device, non_blocking=True)
-        class_ids = class_ids.to(device, non_blocking=True)
-        logits = model(tokens, class_ids)
+        logits = model(tokens)
         loss = compute_loss(logits, tokens, loss_weight)
         total += loss.item() * tokens.size(0)
         count += tokens.size(0)
@@ -106,10 +93,10 @@ def evaluate(model, val_loader, loss_weight, device) -> float:
     return total / count
 
 
-def render_samples(model, class_ids, class_names, temperature=0.8, top_k=3):
-    sampled = generate(model, class_ids, temperature=temperature, top_k=top_k)
-    for i, name in enumerate(class_names):
-        print(f'  --- {name} ---')
+def render_samples(model, n_samples, temperature=0.8, top_k=3):
+    sampled = generate(model, n_samples, temperature=temperature, top_k=top_k)
+    for i in range(n_samples):
+        print(f'  --- sample {i+1}/{n_samples} ---')
         for line in decode(sampled[i]).split('\n'):
             print(f'  {line}')
 
@@ -118,8 +105,7 @@ def main(argv=None):
     p = argparse.ArgumentParser()
     p.add_argument('--train-path', default='openimages/train_ascii_64x32_cc.jsonl')
     p.add_argument('--val-path', default='openimages/validation_ascii_64x32_cc.jsonl')
-    p.add_argument('--class-map', default='class_map.json')
-    p.add_argument('--checkpoint-dir', default='checkpoints')
+    p.add_argument('--checkpoint-dir', default='checkpoints/v2_humans')
     p.add_argument('--resume', default=None)
     # model
     p.add_argument('--dim', type=int, default=384)
@@ -133,12 +119,13 @@ def main(argv=None):
     p.add_argument('--total-steps', type=int, default=20000)
     p.add_argument('--grad-clip', type=float, default=1.0)
     p.add_argument('--bg-loss-weight', type=float, default=0.15)
+    p.add_argument('--no-augment', action='store_true', help='disable mirror augmentation')
     # logging / eval
     p.add_argument('--log-every', type=int, default=20)
     p.add_argument('--eval-every', type=int, default=500)
     p.add_argument('--sample-every', type=int, default=500)
     p.add_argument('--ckpt-every', type=int, default=1000)
-    p.add_argument('--n-samples', type=int, default=8)
+    p.add_argument('--n-samples', type=int, default=4)
     # misc
     p.add_argument('--limit-train', type=int, default=None)
     p.add_argument('--seed', type=int, default=42)
@@ -149,44 +136,35 @@ def main(argv=None):
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     os.makedirs(args.checkpoint_dir, exist_ok=True)
 
-    # ---- class map ----
-    if os.path.exists(args.class_map):
-        with open(args.class_map) as f:
-            class_map = json.load(f)
-        print(f'Loaded class map from {args.class_map}: {len(class_map)} classes')
-    else:
-        print('Building class map from train + val...')
-        class_map = build_class_map(args.train_path, args.val_path)
-        with open(args.class_map, 'w') as f:
-            json.dump(class_map, f, indent=2)
-        print(f'Saved {len(class_map)} classes to {args.class_map}')
+    print(f'Filter labels: {sorted(FILTER_LABELS)}')
+    print(f'Augmentation: {"mirror flip (p=0.5)" if not args.no_augment else "none"}')
 
     # ---- data ----
     print(f'Loading train data from {args.train_path}...')
-    train_tokens, train_class_ids = load_jsonl_to_tensors(
-        args.train_path, class_map, limit=args.limit_train
+    train_tokens = load_jsonl_to_tensors(
+        args.train_path, filter_labels=FILTER_LABELS, limit=args.limit_train,
     )
-    print(f'  {len(train_tokens):,} examples')
+    print(f'  {len(train_tokens):,} training examples')
 
     print(f'Loading val data from {args.val_path}...')
-    val_tokens, val_class_ids = load_jsonl_to_tensors(args.val_path, class_map)
-    print(f'  {len(val_tokens):,} examples')
+    val_tokens = load_jsonl_to_tensors(args.val_path, filter_labels=FILTER_LABELS)
+    print(f'  {len(val_tokens):,} validation examples')
+
+    train_ds = AsciiDataset(train_tokens, augment=not args.no_augment)
+    val_ds = AsciiDataset(val_tokens, augment=False)
 
     train_loader = DataLoader(
-        AsciiDataset(train_tokens, train_class_ids),
-        batch_size=args.batch_size, shuffle=True,
+        train_ds, batch_size=args.batch_size, shuffle=True,
         num_workers=0, pin_memory=True, drop_last=True,
     )
     val_loader = DataLoader(
-        AsciiDataset(val_tokens, val_class_ids),
-        batch_size=args.batch_size, shuffle=False,
+        val_ds, batch_size=args.batch_size, shuffle=False,
         num_workers=0, pin_memory=True,
     )
 
     # ---- model ----
     model = AsciiTransformer(
         vocab_size=VOCAB_SIZE,
-        n_classes=len(class_map),
         dim=args.dim,
         n_layers=args.n_layers,
         n_heads=args.n_heads,
@@ -211,25 +189,6 @@ def main(argv=None):
         optimizer.load_state_dict(ckpt['optimizer'])
         start_step = ckpt['step']
 
-    # Fixed eval class IDs for comparable samples across checkpoints.
-    # Prefer the curated diverse list; fall back to first-N-by-ID if curated
-    # names aren't in this class_map (e.g., after regenerating the dataset).
-    curated_ids = [class_map[name] for name in SAMPLE_CLASS_NAMES if name in class_map]
-    missing = [name for name in SAMPLE_CLASS_NAMES if name not in class_map]
-    if missing:
-        print(f'Warning: curated classes not in class_map: {missing}')
-    if len(curated_ids) >= args.n_samples:
-        picked_ids = curated_ids[: args.n_samples]
-        picked_names = [name for name in SAMPLE_CLASS_NAMES if name in class_map][: args.n_samples]
-    else:
-        print(f'Falling back to first {args.n_samples} classes by ID')
-        id_to_class = {v: k for k, v in class_map.items()}
-        picked_ids = sorted(class_map.values())[: args.n_samples]
-        picked_names = [id_to_class[i] for i in picked_ids]
-    sample_class_ids = torch.tensor(picked_ids, dtype=torch.long, device=device)
-    sample_class_names = picked_names
-    print(f'Sample classes: {sample_class_names}')
-
     # ---- training loop ----
     model.train()
     step = start_step
@@ -239,13 +198,12 @@ def main(argv=None):
 
     while step < args.total_steps:
         try:
-            tokens, class_ids = next(train_iter)
+            tokens = next(train_iter)
         except StopIteration:
             train_iter = iter(train_loader)
-            tokens, class_ids = next(train_iter)
+            tokens = next(train_iter)
 
         tokens = tokens.to(device, non_blocking=True)
-        class_ids = class_ids.to(device, non_blocking=True)
 
         lr = lr_schedule(step, args.peak_lr, warmup_steps, args.total_steps)
         for g in optimizer.param_groups:
@@ -254,7 +212,7 @@ def main(argv=None):
         with torch.amp.autocast(
             device_type='cuda', dtype=torch.bfloat16, enabled=(device == 'cuda')
         ):
-            logits = model(tokens, class_ids)
+            logits = model(tokens)
             loss = compute_loss(logits, tokens, loss_weight)
 
         optimizer.zero_grad(set_to_none=True)
@@ -276,7 +234,7 @@ def main(argv=None):
 
         if step > 0 and step % args.sample_every == 0:
             print(f'  [samples @ step {step}]')
-            render_samples(model, sample_class_ids, sample_class_names)
+            render_samples(model, args.n_samples)
 
         if step > 0 and step % args.ckpt_every == 0:
             ckpt_path = os.path.join(args.checkpoint_dir, f'step_{step}.pt')
@@ -284,7 +242,6 @@ def main(argv=None):
                 'model': model.state_dict(),
                 'optimizer': optimizer.state_dict(),
                 'step': step,
-                'class_map': class_map,
                 'config': vars(args),
             }, ckpt_path)
             print(f'  [ckpt] {ckpt_path}')

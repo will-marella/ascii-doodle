@@ -47,7 +47,9 @@ app = modal.App(APP_NAME)
 image = (
     modal.Image.debian_slim(python_version="3.11")
     .pip_install("torch==2.4.0", "numpy")
-    .add_local_python_source("data", "model", "sample", "train", "inspect_samples")
+    .add_local_python_source(
+        "data", "model", "sample", "train", "inspect_samples", "probe_prefix",
+    )
 )
 
 volume = modal.Volume.from_name(VOLUME_NAME, create_if_missing=True)
@@ -125,12 +127,46 @@ def _inspect_remote(checkpoint: str):
 
 
 @app.local_entrypoint()
-def inspect(checkpoint: str = "/data/checkpoints/step_19000.pt"):
+def inspect(checkpoint: str = "/data/checkpoints/v2_humans/step_19000.pt"):
     """Generate samples from a trained checkpoint under multiple decoding configs.
 
     Runs on a Modal A10G, which is ~10-20x faster than local CPU for sampling.
 
     Args:
-        checkpoint: path inside the Modal volume. Default: latest run's final ckpt.
+        checkpoint: path inside the Modal volume. Default: latest v2 run's final ckpt.
     """
     _inspect_remote.remote(checkpoint)
+
+
+@app.function(
+    image=image,
+    volumes={VOLUME_MOUNT: volume},
+    gpu="A10G",
+    timeout=60 * 30,
+)
+def _probe_remote(checkpoint: str, n_samples: int):
+    import os
+    import probe_prefix
+    os.chdir(VOLUME_MOUNT)
+    probe_prefix.main([
+        '--checkpoint', checkpoint,
+        '--device', 'cuda',
+        '--n-samples', str(n_samples),
+    ])
+
+
+@app.local_entrypoint()
+def probe(
+    checkpoint: str = "/data/checkpoints/v2_humans/step_19000.pt",
+    n_samples: int = 3,
+):
+    """Prefix-priming diagnostic: does real context help the model produce better output?
+
+    For each of `n_samples` real training examples, runs generation at multiple
+    prefix lengths (0, 4, 8, 16, 24 rows) and prints all continuations.
+
+    Args:
+        checkpoint: path inside the Modal volume.
+        n_samples: number of real samples to test (default 3).
+    """
+    _probe_remote.remote(checkpoint, n_samples)

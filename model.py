@@ -1,9 +1,10 @@
 """Autoregressive transformer for ASCII image generation.
 
-Default config: 8 layers x 384 hidden x 6 heads (64/head) x 1536 FFN ~ 14.4M params.
-2D learned positional encoding (row + col), class conditioning via single
-embedding added to every position, pre-LayerNorm, causal self-attention via
-F.scaled_dot_product_attention (flash attention on A100+).
+v2: unconditional (no class embedding). Default config:
+8 layers x 384 hidden x 6 heads (64/head) x 1536 FFN  ~ 14.2M params.
+
+2D learned positional encoding (row + col), pre-LayerNorm, causal
+self-attention via F.scaled_dot_product_attention (flash attention on A100+).
 """
 
 import torch
@@ -49,7 +50,6 @@ class AsciiTransformer(nn.Module):
     def __init__(
         self,
         vocab_size: int = 8,
-        n_classes: int = None,
         grid_h: int = 32,
         grid_w: int = 64,
         dim: int = 384,
@@ -58,7 +58,6 @@ class AsciiTransformer(nn.Module):
         ffn_mult: int = 4,
     ):
         super().__init__()
-        assert n_classes is not None, 'n_classes must be provided'
         seq_len = grid_h * grid_w
 
         self.vocab_size = vocab_size
@@ -69,7 +68,6 @@ class AsciiTransformer(nn.Module):
         self.tok_emb = nn.Embedding(vocab_size, dim)
         self.row_emb = nn.Embedding(grid_h, dim)
         self.col_emb = nn.Embedding(grid_w, dim)
-        self.class_emb = nn.Embedding(n_classes, dim)
 
         # Precomputed row/col index for every position in raster order
         positions = torch.arange(seq_len)
@@ -94,18 +92,16 @@ class AsciiTransformer(nn.Module):
         elif isinstance(m, nn.Embedding):
             nn.init.normal_(m.weight, mean=0.0, std=0.02)
 
-    def forward(self, tokens: torch.Tensor, class_ids: torch.Tensor) -> torch.Tensor:
+    def forward(self, tokens: torch.Tensor) -> torch.Tensor:
         """
-        tokens:    [B, T] long
-        class_ids: [B] long
-        returns:   [B, T, vocab_size] logits
+        tokens: [B, T] long
+        returns: [B, T, vocab_size] logits
         """
         B, T = tokens.shape
         x = (
             self.tok_emb(tokens)
-            + self.row_emb(self.row_idx[:T])              # broadcasts over B
+            + self.row_emb(self.row_idx[:T])
             + self.col_emb(self.col_idx[:T])
-            + self.class_emb(class_ids).unsqueeze(1)      # broadcasts over T
         )
         for block in self.blocks:
             x = block(x)

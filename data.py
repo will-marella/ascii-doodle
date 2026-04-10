@@ -1,9 +1,9 @@
 """
 Load ASCII dataset from JSONL, pre-tokenize into in-RAM tensors.
 
-Provides AsciiDataset which yields (tokens, class_id) pairs. The full dataset
-is loaded once at startup — ~600MB for 293k examples fits comfortably in RAM,
-which eliminates per-step I/O during training.
+Provides AsciiDataset which yields tokens for the autoregressive model.
+Loading supports optional label filtering (e.g., filter to just human
+classes), and the dataset supports horizontal mirror augmentation on train.
 """
 
 import json
@@ -41,48 +41,58 @@ def tokenize_ascii(ascii_str: str, table: np.ndarray) -> np.ndarray:
     return tokens
 
 
-def build_class_map(*paths: str) -> dict:
-    """Scan the given JSONL files and build a deterministic label->id mapping."""
-    labels = set()
-    for path in paths:
-        with open(path) as f:
-            for line in f:
-                labels.add(json.loads(line)['label'])
-    return {label: i for i, label in enumerate(sorted(labels))}
+def load_jsonl_to_tensors(
+    path: str,
+    filter_labels: set = None,
+    limit: int = None,
+) -> torch.Tensor:
+    """Read JSONL into a [N, SEQ_LEN] uint8 tensor of tokenized ASCII.
 
-
-def load_jsonl_to_tensors(path: str, class_map: dict, limit: int = None):
-    """Read JSONL into (tokens [N, SEQ_LEN] uint8, class_ids [N] int64)."""
+    If filter_labels is provided, skip any example whose label is not in it.
+    """
     table = build_char_lookup()
 
+    tokens_list = []
+    skipped = 0
     with open(path) as f:
-        n_lines = sum(1 for _ in f)
-    if limit is not None:
-        n_lines = min(n_lines, limit)
-
-    tokens = np.empty((n_lines, SEQ_LEN), dtype=np.uint8)
-    class_ids = np.empty(n_lines, dtype=np.int64)
-
-    with open(path) as f:
-        for i, line in enumerate(f):
-            if i >= n_lines:
-                break
+        for line in f:
             r = json.loads(line)
-            tokens[i] = tokenize_ascii(r['ascii'], table)
-            class_ids[i] = class_map[r['label']]
-            if (i + 1) % 50000 == 0:
-                print(f'  [{path}] tokenized {i+1}/{n_lines}')
+            if filter_labels is not None and r['label'] not in filter_labels:
+                skipped += 1
+                continue
+            tokens_list.append(tokenize_ascii(r['ascii'], table))
+            if limit is not None and len(tokens_list) >= limit:
+                break
+            if len(tokens_list) % 20000 == 0:
+                print(f'  [{path}] tokenized {len(tokens_list)}')
 
-    return torch.from_numpy(tokens), torch.from_numpy(class_ids)
+    if filter_labels is not None:
+        print(f'  [{path}] kept {len(tokens_list):,}, skipped {skipped:,} non-matching')
+
+    if not tokens_list:
+        tokens = np.empty((0, SEQ_LEN), dtype=np.uint8)
+    else:
+        tokens = np.stack(tokens_list)
+    return torch.from_numpy(tokens)
 
 
 class AsciiDataset(Dataset):
-    def __init__(self, tokens: torch.Tensor, class_ids: torch.Tensor):
+    """Holds pre-tokenized ASCII samples in RAM.
+
+    If augment=True, each __getitem__ returns a horizontally-mirrored copy
+    with probability 0.5. Train data typically uses augment=True;
+    val data uses augment=False so val loss stays comparable across runs.
+    """
+
+    def __init__(self, tokens: torch.Tensor, augment: bool = False):
         self.tokens = tokens
-        self.class_ids = class_ids
+        self.augment = augment
 
     def __len__(self):
         return len(self.tokens)
 
     def __getitem__(self, idx):
-        return self.tokens[idx].long(), self.class_ids[idx]
+        tokens = self.tokens[idx].long()
+        if self.augment and torch.rand(1).item() < 0.5:
+            tokens = tokens.view(GRID_H, GRID_W).flip(dims=[1]).reshape(-1)
+        return tokens

@@ -1,4 +1,4 @@
-"""Sampling and decoding for the ASCII transformer."""
+"""Sampling and decoding for the ASCII transformer (unconditional)."""
 
 import torch
 import torch.nn.functional as F
@@ -17,34 +17,45 @@ def decode(token_ids) -> str:
 @torch.no_grad()
 def generate(
     model,
-    class_ids: torch.Tensor,
+    n_samples: int = None,
+    prefix: torch.Tensor = None,
     temperature: float = 0.8,
     top_k: int = 3,
 ) -> torch.Tensor:
     """
-    Autoregressive sampling with temperature + top-k.
+    Autoregressive sampling with temperature + top-k, optionally primed with
+    a fixed prefix.
 
-    class_ids: [B] long tensor on the same device as model.
+    Two modes:
+      - Unconditional: pass `n_samples`. Position 0 is fixed to BG_TOKEN
+        (top-left of every canvas is background in the training data).
+      - Prefix-primed: pass `prefix` of shape [B, prefix_len]. Those positions
+        are locked to the given tokens and sampling proceeds from prefix_len.
+
     Returns: [B, SEQ_LEN] long tensor of sampled token IDs.
 
-    Position 0 is fixed to BG_TOKEN — the top-left of every training canvas is
-    background, so we skip learning/predicting it. Positions 1..SEQ_LEN-1 are
-    sampled autoregressively.
-
-    Note: O(SEQ_LEN^2) compute without a KV cache. For SEQ_LEN=2048 and small
-    batch sizes (8-16) this takes ~30-60s on an A100 — acceptable as a
-    training-time callback. Add KV caching if it becomes a bottleneck.
+    Note: O(SEQ_LEN^2) compute without a KV cache.
     """
     was_training = model.training
     model.eval()
 
-    device = class_ids.device
-    B = class_ids.shape[0]
-    tokens = torch.full((B, SEQ_LEN), BG_TOKEN, dtype=torch.long, device=device)
+    device = next(model.parameters()).device
 
-    for t in range(SEQ_LEN - 1):
-        logits = model(tokens[:, :t + 1], class_ids)        # [B, t+1, V]
-        next_logits = logits[:, -1, :] / temperature         # [B, V]
+    if prefix is not None:
+        B, prefix_len = prefix.shape
+        assert prefix_len >= 1 and prefix_len <= SEQ_LEN
+        tokens = torch.full((B, SEQ_LEN), BG_TOKEN, dtype=torch.long, device=device)
+        tokens[:, :prefix_len] = prefix.to(device)
+        start_t = prefix_len - 1
+    else:
+        assert n_samples is not None, 'provide either n_samples or prefix'
+        B = n_samples
+        tokens = torch.full((B, SEQ_LEN), BG_TOKEN, dtype=torch.long, device=device)
+        start_t = 0
+
+    for t in range(start_t, SEQ_LEN - 1):
+        logits = model(tokens[:, :t + 1])                # [B, t+1, V]
+        next_logits = logits[:, -1, :] / temperature      # [B, V]
 
         if top_k is not None:
             v, _ = torch.topk(next_logits, top_k, dim=-1)
@@ -55,7 +66,7 @@ def generate(
             )
 
         probs = F.softmax(next_logits, dim=-1)
-        next_tok = torch.multinomial(probs, num_samples=1).squeeze(-1)  # [B]
+        next_tok = torch.multinomial(probs, num_samples=1).squeeze(-1)
         tokens[:, t + 1] = next_tok
 
     if was_training:
