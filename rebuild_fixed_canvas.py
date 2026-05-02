@@ -22,10 +22,15 @@ from PIL import Image, ImageFilter
 import numpy as np
 from scipy.ndimage import label as cc_label
 
-RAMP = ' "roy48Q'
+# Standard ASCII-art density ramp: light → dark.
+# Background = space (index 0) = empty/copy-pasteable.
+# Foreground/dark pixels = dense characters (#, @).
+RAMP = ' .:-+*#@'
+
+# Canvas dimensions — override via --canvas-size (e.g. "128x64" or "256x128")
 CANVAS_W = 64
 CANVAS_H = 32
-TARGET_W = 60   # max subject width inside canvas
+TARGET_W = 60   # max subject width inside canvas (auto-scaled if canvas overridden)
 TARGET_H = 30   # max subject height inside canvas
 WIDTH_RATIO = 2.2
 MIN_W = 20
@@ -40,11 +45,18 @@ def load_classes(path):
     return classes
 
 
-def passes_filter(row):
+def passes_filter(row, min_span: float = 0.40):
+    """Filter annotations to subjects that span at least `min_span` of the image
+    and don't touch more than one edge.
+
+    Default min_span is 0.40 (relaxed from the original 0.60). Smaller subjects
+    render with more padding around them in the canvas, but that's still useful
+    training data and gives us ~50% more examples.
+    """
     xmin, xmax = float(row['BoxXMin']), float(row['BoxXMax'])
     ymin, ymax = float(row['BoxYMin']), float(row['BoxYMax'])
     span = max(xmax - xmin, ymax - ymin)
-    if span < 0.60:
+    if span < min_span:
         return False
     edge_count = sum([xmin < 0.02, xmax > 0.98, ymin < 0.02, ymax > 0.98])
     if edge_count > 1:
@@ -80,12 +92,27 @@ def largest_component_mask(mask_arr):
 
 
 def render_one(img_path, mask_path, img_w=None, img_h=None):
-    """Returns ASCII string or None on failure."""
+    """Open an image+mask file pair and render to ASCII (or None on failure)."""
     try:
         img = Image.open(img_path).convert('RGBA')
         mask = Image.open(mask_path).convert('L').resize(img.size, Image.LANCZOS)
         mask_arr = np.array(mask)
+        return render_masked_image(img, mask_arr)
+    except Exception:
+        return None
 
+
+def render_masked_image(img, mask_arr):
+    """Core ASCII rendering for a (PIL RGBA image, mask numpy array) pair.
+
+    Shared rendering pipeline used by both rebuild_fixed_canvas (Open Images,
+    mask files on disk) and rebuild_coco (COCO, mask arrays decoded from
+    RLE/polygon segmentations in JSON). Identical filters, normalization, and
+    ASCII conversion across both.
+
+    Returns multi-line ASCII string, or None if any filter rejects the example.
+    """
+    try:
         # Pick largest connected component
         mask_arr = largest_component_mask(mask_arr)
         if mask_arr is None:
@@ -103,7 +130,8 @@ def render_one(img_path, mask_path, img_w=None, img_h=None):
         full_h, full_w = mask_arr.shape
         span_h = (rmax - rmin + 1) / full_h
         span_w = (cmax - cmin + 1) / full_w
-        if max(span_h, span_w) < 0.60:
+        # Match the relaxed filter from passes_filter (was hardcoded 0.60)
+        if max(span_h, span_w) < 0.40:
             return None
         edge_count = sum([
             rmin == 0, rmax == full_h - 1,
@@ -153,17 +181,20 @@ def render_one(img_path, mask_path, img_w=None, img_h=None):
         # Resize to (new_w, new_h)
         resized = np.array(Image.fromarray(enh_arr).resize((new_w, new_h), Image.LANCZOS))
 
-        # Center on 64x32 canvas (white background)
+        # Center on canvas. Fill with white (255) — represents "no subject"
+        # which maps to the lightest character (space) under the inverted ramp.
         canvas = np.full((CANVAS_H, CANVAS_W), 255, dtype=np.uint8)
         y_off = (CANVAS_H - new_h) // 2
         x_off = (CANVAS_W - new_w) // 2
         canvas[y_off:y_off + new_h, x_off:x_off + new_w] = resized
 
-        # Convert to ASCII
+        # Convert to ASCII. Inverted convention:
+        # dark source pixels (low v) -> dense characters (high index)
+        # bright source pixels (high v) -> sparse characters (low index)
         n = len(RAMP) - 1
         lines = []
         for row in canvas:
-            lines.append(''.join(RAMP[int((v / 255.0) * n)] for v in row))
+            lines.append(''.join(RAMP[int(((255 - v) / 255.0) * n)] for v in row))
 
         return '\n'.join(lines)
     except Exception:
@@ -185,10 +216,22 @@ def process_one(row, classes, masks_dir, images_dir):
     if ascii_art is None:
         return None
 
-    return {'label': label, 'ascii': ascii_art}
+    # Include image_id and bbox so a downstream script can compute CLIP
+    # embeddings of the bbox-cropped photo. bbox is normalized [xmin, ymin, xmax, ymax].
+    return {
+        'label': label,
+        'ascii': ascii_art,
+        'image_id': img_id,
+        'bbox': [
+            float(row['BoxXMin']),
+            float(row['BoxYMin']),
+            float(row['BoxXMax']),
+            float(row['BoxYMax']),
+        ],
+    }
 
 
-def main():
+def main(argv=None):
     parser = argparse.ArgumentParser()
     parser.add_argument('--annotations', required=True)
     parser.add_argument('--masks-dir', required=True)
@@ -197,7 +240,21 @@ def main():
     parser.add_argument('--output', required=True)
     parser.add_argument('--workers', type=int, default=16)
     parser.add_argument('--limit', type=int, default=None)
-    args = parser.parse_args()
+    parser.add_argument('--canvas-size', default=None,
+                        help='WxH canvas override, e.g. "128x64" or "256x128". '
+                             'Default: 64x32 (original).')
+    args = parser.parse_args(argv)
+
+    # Allow canvas size override for higher-resolution renders
+    global CANVAS_W, CANVAS_H, TARGET_W, TARGET_H, MIN_W, MIN_H
+    if args.canvas_size:
+        w, h = args.canvas_size.split('x')
+        CANVAS_W, CANVAS_H = int(w), int(h)
+        TARGET_W = CANVAS_W - 4          # leave 2-char padding each side
+        TARGET_H = CANVAS_H - 2          # leave 1-row padding top/bottom
+        MIN_W = max(20, CANVAS_W // 3)
+        MIN_H = max(10, CANVAS_H // 3)
+        print(f'Canvas override: {CANVAS_W}x{CANVAS_H} (target {TARGET_W}x{TARGET_H})')
 
     print('Loading classes...')
     classes = load_classes(args.classes)
@@ -225,7 +282,9 @@ def main():
                 executor.submit(process_one, row, classes, args.masks_dir, args.images_dir)
                 for row in candidates
             ]
-            for i, future in enumerate(as_completed(futures)):
+            # Iterate in submission order so the JSONL is deterministically
+            # aligned with `candidates` (needed for parallel CLIP embedding files).
+            for i, future in enumerate(futures):
                 result = future.result()
                 if result:
                     out_f.write(json.dumps(result) + '\n')

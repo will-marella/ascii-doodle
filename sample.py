@@ -4,6 +4,10 @@ Generation is iterative: start from all-[MASK], run the model, keep the
 highest-confidence predictions, re-mask the rest, repeat. After ~12 iterations
 the sequence is fully committed. Each iteration is a single forward pass on
 the full 2048-token sequence with bidirectional attention.
+
+Also exposes a small `text_to_clip_embeddings` helper used at DiT sampling
+time to convert prompts into CLIP-compatible embeddings (the same space the
+DiT was trained against).
 """
 
 import math
@@ -14,8 +18,47 @@ import torch.nn.functional as F
 from data import BG_TOKEN, GRID_W, MASK_TOKEN, RAMP, SEQ_LEN
 
 
-def decode(token_ids) -> str:
-    """Turn a sequence of SEQ_LEN token IDs into a multi-line ASCII image.
+_clip_text_cache = {}
+
+
+def text_to_clip_embeddings(
+    prompts: list,
+    device: torch.device = None,
+    model_name: str = 'openai/clip-vit-base-patch32',
+) -> torch.Tensor:
+    """Encode text prompts via CLIP's text encoder.
+
+    Returns: [N, embed_dim] float32 tensor of CLIP text embeddings, in the
+    same space as the image embeddings used at DiT training time.
+
+    The CLIP model is cached after first load. Lazy import so the rest of
+    sample.py doesn't depend on `transformers`.
+    """
+    cache_key = (model_name, str(device))
+    if cache_key not in _clip_text_cache:
+        from transformers import CLIPModel, CLIPTokenizer
+        model = CLIPModel.from_pretrained(model_name).to(device)
+        model.eval()
+        for p in model.parameters():
+            p.requires_grad = False
+        tokenizer = CLIPTokenizer.from_pretrained(model_name)
+        _clip_text_cache[cache_key] = (model, tokenizer)
+    model, tokenizer = _clip_text_cache[cache_key]
+
+    inputs = tokenizer(
+        prompts, return_tensors='pt', padding=True, truncation=True,
+    )
+    inputs = {k: v.to(device) for k, v in inputs.items()}
+    with torch.no_grad():
+        feats = model.get_text_features(**inputs)
+    return feats.float()
+
+
+def decode(token_ids, grid_w: int = None) -> str:
+    """Turn a sequence of token IDs into a multi-line ASCII image.
+
+    grid_w: row width. Defaults to data.GRID_W (64). For higher-resolution
+    canvases (e.g. 128x64) pass the actual width so rows are split correctly.
 
     Any residual MASK tokens are rendered as '?' for visibility.
     """
@@ -28,7 +71,9 @@ def decode(token_ids) -> str:
         else:
             chars.append(RAMP[t])
     flat = ''.join(chars)
-    return '\n'.join(flat[i:i + GRID_W] for i in range(0, SEQ_LEN, GRID_W))
+    if grid_w is None:
+        grid_w = GRID_W
+    return '\n'.join(flat[i:i + grid_w] for i in range(0, len(flat), grid_w))
 
 
 @torch.no_grad()
