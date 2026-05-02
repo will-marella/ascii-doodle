@@ -30,8 +30,9 @@ from data import (
     load_clip_embeddings,
     load_jsonl_to_tensors,
 )
+from ascii_utils import decode
+from clip_utils import text_to_clip_embeddings
 from dit import DiT
-from sample import decode
 from vae import AsciiVAE
 
 
@@ -523,7 +524,6 @@ def main(argv=None):
         # Also try encoding text prompts via CLIP text encoder
         if sample_text_clip is None:
             try:
-                from sample import text_to_clip_embeddings
                 print(f'Encoding {len(SAMPLE_PROMPTS)} text prompts via CLIP...')
                 sample_text_clip = text_to_clip_embeddings(
                     SAMPLE_PROMPTS,

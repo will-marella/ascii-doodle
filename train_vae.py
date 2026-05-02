@@ -23,7 +23,7 @@ from data import (
     N_ASCII_TOKENS,
     load_jsonl_to_tensors,
 )
-from sample import decode
+from ascii_utils import decode
 from vae import AsciiVAE
 
 

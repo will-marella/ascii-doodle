@@ -1,0 +1,92 @@
+{
+  "checkpoint": "checkpoints/dit_vae_full_250m/step_60000.pt",
+  "vae_checkpoint": "checkpoints/vae_qd_full_b01/step_10000.pt",
+  "guidance_scale": 10.0,
+  "sample_steps": 50,
+  "samples": [
+    {
+      "index": 1,
+      "group": "group1_direct",
+      "prompt": "bicycle",
+      "txt": "01_group1_direct_bicycle.txt",
+      "svg": "01_group1_direct_bicycle.svg"
+    },
+    {
+      "index": 2,
+      "group": "group1_direct",
+      "prompt": "tree",
+      "txt": "02_group1_direct_tree.txt",
+      "svg": "02_group1_direct_tree.svg"
+    },
+    {
+      "index": 3,
+      "group": "group1_direct",
+      "prompt": "car",
+      "txt": "03_group1_direct_car.txt",
+      "svg": "03_group1_direct_car.svg"
+    },
+    {
+      "index": 4,
+      "group": "group1_direct",
+      "prompt": "donut",
+      "txt": "04_group1_direct_donut.txt",
+      "svg": "04_group1_direct_donut.svg"
+    },
+    {
+      "index": 5,
+      "group": "group2_synonyms",
+      "prompt": "bike",
+      "txt": "05_group2_synonyms_bike.txt",
+      "svg": "05_group2_synonyms_bike.svg"
+    },
+    {
+      "index": 6,
+      "group": "group2_synonyms",
+      "prompt": "oak",
+      "txt": "06_group2_synonyms_oak.txt",
+      "svg": "06_group2_synonyms_oak.svg"
+    },
+    {
+      "index": 7,
+      "group": "group2_synonyms",
+      "prompt": "automobile",
+      "txt": "07_group2_synonyms_automobile.txt",
+      "svg": "07_group2_synonyms_automobile.svg"
+    },
+    {
+      "index": 8,
+      "group": "group2_synonyms",
+      "prompt": "doughnut",
+      "txt": "08_group2_synonyms_doughnut.txt",
+      "svg": "08_group2_synonyms_doughnut.svg"
+    },
+    {
+      "index": 9,
+      "group": "group3_near_ood",
+      "prompt": "storm",
+      "txt": "09_group3_near_ood_storm.txt",
+      "svg": "09_group3_near_ood_storm.svg"
+    },
+    {
+      "index": 10,
+      "group": "group3_near_ood",
+      "prompt": "flower vase",
+      "txt": "10_group3_near_ood_flower-vase.txt",
+      "svg": "10_group3_near_ood_flower-vase.svg"
+    },
+    {
+      "index": 11,
+      "group": "group3_near_ood",
+      "prompt": "mushroom cloud",
+      "txt": "11_group3_near_ood_mushroom-cloud.txt",
+      "svg": "11_group3_near_ood_mushroom-cloud.svg"
+    },
+    {
+      "index": 12,
+      "group": "group3_near_ood",
+      "prompt": "dancer",
+      "txt": "12_group3_near_ood_dancer.txt",
+      "svg": "12_group3_near_ood_dancer.svg"
+    }
+  ]
+}
