@@ -143,8 +143,8 @@ def train_dit(gpu: str = 'a10g', args: str = ''):
 @app.local_entrypoint()
 def sample_prompts(
     prompts: str,
-    checkpoint: str = 'checkpoints/dit_vae_full_250m/step_60000.pt',
-    vae_checkpoint: str = 'checkpoints/vae_qd_full_b01/step_10000.pt',
+    checkpoint: str = 'local_data/models/checkpoints/dit_vae_full_250m/step_60000.pt',
+    vae_checkpoint: str = 'local_data/models/checkpoints/vae_qd_full_b01/step_10000.pt',
     guidance_scale: float = 10.0,
     sample_steps: int = 50,
 ):

@@ -39,8 +39,8 @@ volume = modal.Volume.from_name(VOLUME_NAME)
 class Generator:
     def __init__(
         self,
-        checkpoint: str = "checkpoints/dit_vae_full_250m/step_60000.pt",
-        vae_checkpoint: str = "checkpoints/vae_qd_full_b01/step_10000.pt",
+        checkpoint: str = "local_data/models/checkpoints/dit_vae_full_250m/step_60000.pt",
+        vae_checkpoint: str = "local_data/models/checkpoints/vae_qd_full_b01/step_10000.pt",
     ):
         self.checkpoint = checkpoint
         self.vae_checkpoint = vae_checkpoint

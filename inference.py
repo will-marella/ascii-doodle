@@ -1,6 +1,7 @@
 """Inference helpers for the current QuickDraw ASCII pipeline."""
 
 from dataclasses import dataclass
+import os
 
 import torch
 
@@ -10,8 +11,8 @@ from dit import DiT
 from train_dit import load_vae, sample_flow, unnormalize_latent
 
 
-DEFAULT_DIT_CHECKPOINT = 'checkpoints/dit_vae_full_250m/step_60000.pt'
-DEFAULT_VAE_CHECKPOINT = 'checkpoints/vae_qd_full_b01/step_10000.pt'
+DEFAULT_DIT_CHECKPOINT = 'local_data/models/checkpoints/dit_vae_full_250m/step_60000.pt'
+DEFAULT_VAE_CHECKPOINT = 'local_data/models/checkpoints/vae_qd_full_b01/step_10000.pt'
 PROMPT_PREFIX = 'a drawing of a '
 
 
@@ -23,6 +24,21 @@ class AsciiInferencePipeline:
     device: str
     latent_mean: torch.Tensor
     latent_std: torch.Tensor
+
+
+def resolve_local_checkpoint_path(path: str | None, fallback: str) -> str:
+    """Map legacy local checkpoint paths to the current ignored local_data layout."""
+    if not path:
+        return fallback
+    if os.path.exists(path):
+        return path
+
+    if path.startswith('checkpoints/'):
+        remapped = os.path.join('local_data', 'models', path)
+        if os.path.exists(remapped):
+            return remapped
+
+    return fallback
 
 
 def load_pipeline(
@@ -38,7 +54,10 @@ def load_pipeline(
     config = ckpt['config']
     clip_dim = ckpt.get('clip_dim', 0)
 
-    vae_path = vae_checkpoint or config.get('vae_checkpoint') or DEFAULT_VAE_CHECKPOINT
+    vae_path = resolve_local_checkpoint_path(
+        vae_checkpoint or config.get('vae_checkpoint'),
+        DEFAULT_VAE_CHECKPOINT,
+    )
     vae, _, grid_w = load_vae(vae_path, device)
 
     dit = DiT(

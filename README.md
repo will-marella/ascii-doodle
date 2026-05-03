@@ -126,8 +126,8 @@ ASCII itself is also a real limitation: the outputs look best in monospace conte
 
 Current default inference target:
 
-- DiT: `checkpoints/dit_vae_full_250m/step_60000.pt`
-- VAE: `checkpoints/vae_qd_full_b01/step_10000.pt`
+- DiT: `local_data/models/checkpoints/dit_vae_full_250m/step_60000.pt`
+- VAE: `local_data/models/checkpoints/vae_qd_full_b01/step_10000.pt`
 
 Best current demo settings:
 
@@ -191,20 +191,20 @@ python build_quickdraw_full.py
 Train the VAE:
 
 ```bash
-python train_vae.py --train-npy quickdraw/full_32x16
+python train_vae.py --train-npy local_data/quickdraw/full_32x16
 ```
 
 Train the latent DiT:
 
 ```bash
 python train_dit.py \
-  --vae-checkpoint checkpoints/vae_qd_full_b01/step_10000.pt \
-  --train-npy quickdraw/full_32x16
+  --vae-checkpoint local_data/models/checkpoints/vae_qd_full_b01/step_10000.pt \
+  --train-npy local_data/quickdraw/full_32x16
 ```
 
 ## Weights
 
-Large checkpoints are not tracked in git.
+Large checkpoints and datasets are not tracked in git.
 
 The intended split is:
 
@@ -212,6 +212,8 @@ The intended split is:
 - host model weights separately
 
 The `250m` checkpoint is the best demo model, but it is too large to treat as a normal git artifact. A Hugging Face model repo is the right home for it.
+
+Local experiments, checkpoints, and datasets live under `local_data/`, which is intentionally ignored.
 
 ## Repo Structure
 
@@ -221,7 +223,6 @@ The `250m` checkpoint is the best demo model, but it is too large to treat as a 
 - `train_vae.py`: train the tokenizer VAE
 - `train_dit.py`: train the latent diffusion transformer
 - `build_quickdraw_full.py`: rebuild the QuickDraw dataset
-- `legacy/`: archived earlier experiments, including MaskGIT, OpenImages, COCO, and probe scripts
 
 ## Notes
 

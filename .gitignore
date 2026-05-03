@@ -21,6 +21,7 @@ coco/
 # Quick, Draw!
 quickdraw/
 quickdraw_cache/
+local_data/
 
 # Archives and bundles
 archive/
@@ -69,6 +70,7 @@ env/
 # ============================
 .idea/
 .vscode/
+.claude/
 *.swp
 *.swo
 .DS_Store
@@ -78,3 +80,6 @@ Thumbs.db
 # Modal local state
 # ============================
 .modal/
+
+# Showcase intermediates
+showcase_exports/*.txt
