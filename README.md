@@ -1,35 +1,19 @@
-# ASCII Generator
+# ASCII Doodle
 
-`ASCII Generator` is a prompt-conditioned generative model for ASCII sketches.
+`ASCII Doodle` is a prompt-conditioned, 300M parameter generative model for ASCII sketches.
 
 It uses:
-
 - a VAE to compress `32x16` ASCII token grids
-- a CLIP-conditioned DiT to sample in the VAE latent space
+- a CLIP-conditioned DiT trained with flow matching to generate in the VAE latent space
 - a small inference stack that runs locally on CPU
 
 The result is a compact text-to-ASCII pipeline that can produce recognizable doodles, preserve structure across related prompts, and occasionally generalize beyond the exact training labels.
 
-## What It Does
+The model was trained on ASCII-converted examples of the 'Quick, Draw!' dataset. It performs best on simple, iconic objects. It is stable across related wording, and modestly capable of some near-out-of-distribution approximations and conceptual blends despite its limitations.
 
-The model was trained on QuickDraw-style categories and performs best on simple, iconic objects. In practice, it can:
+## Results
 
-- generate coherent ASCII sketches for many in-distribution prompts
-- stay surprisingly stable across synonyms and alternate wording
-- approximate nearby unseen prompts by recombining learned visual structure
-- produce interesting failures on composition, abstraction, and prompts far outside the training distribution
-
-At its best, the project shows that even in a tiny symbolic image space, a latent diffusion pipeline can learn a usable visual prior.
-
-## Why It’s Interesting
-
-Most generative models operate in pixels. This one operates in text.
-
-That constraint makes the problem harder, but also more legible: every success and every failure is easy to inspect. The model has to learn shape, silhouette, and category structure in an extremely low-resolution medium where there is very little room to hide.
-
-What came out of that constraint is a system that is lightweight, visually distinctive, and technically real: trained end-to-end, prompt-conditioned, locally runnable, and good enough to produce genuinely memorable outputs.
-
-## Showcase
+On prompts that are close to the 'Quick, Draw!' training distribution, the model learns to reproduce recognizable categories. The paired examples below show that this behavior is not limited to exact labels: CLIP-based prompt conditioning gives the model room to follow alternate wording while preserving the same underlying concept.
 
 ### Direct Matches vs. Alternate Wording
 
@@ -116,57 +100,52 @@ What came out of that constraint is a system that is lightweight, visually disti
   </tbody>
 </table>
 
-### Near-OOD Prompts
+`ASCII Doodle` also shows a modest ability to extend beyond the exact training labels. It retains a rough sense of form on nearby out-of-distribution prompts and occasionally produces plausible conceptual blends, but the training set and model size are still far too limited for broad cross-domain generalization.
 
-`storm`
+### Near-Out-of-Distribution Prompts
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="showcase_exports/09_group3_near_ood_storm_dark.svg">
-  <source media="(prefers-color-scheme: light)" srcset="showcase_exports/09_group3_near_ood_storm_light.svg">
-  <img alt="ASCII sketch for the prompt storm" src="showcase_exports/09_group3_near_ood_storm_light.svg">
-</picture>
+<table>
+  <tbody>
+    <tr>
+      <td>
+        <div><code>storm</code></div>
+        <picture>
+          <source media="(prefers-color-scheme: dark)" srcset="showcase_exports/09_group3_near_ood_storm_dark.svg">
+          <source media="(prefers-color-scheme: light)" srcset="showcase_exports/09_group3_near_ood_storm_light.svg">
+          <img alt="ASCII sketch for the prompt storm" src="showcase_exports/09_group3_near_ood_storm_light.svg">
+        </picture>
+      </td>
+      <td>
+        <div><code>flower vase</code></div>
+        <picture>
+          <source media="(prefers-color-scheme: dark)" srcset="showcase_exports/10_group3_near_ood_flower-vase_dark.svg">
+          <source media="(prefers-color-scheme: light)" srcset="showcase_exports/10_group3_near_ood_flower-vase_light.svg">
+          <img alt="ASCII sketch for the prompt flower vase" src="showcase_exports/10_group3_near_ood_flower-vase_light.svg">
+        </picture>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <div><code>mushroom cloud</code></div>
+        <picture>
+          <source media="(prefers-color-scheme: dark)" srcset="showcase_exports/11_group3_near_ood_mushroom-cloud_dark.svg">
+          <source media="(prefers-color-scheme: light)" srcset="showcase_exports/11_group3_near_ood_mushroom-cloud_light.svg">
+          <img alt="ASCII sketch for the prompt mushroom cloud" src="showcase_exports/11_group3_near_ood_mushroom-cloud_light.svg">
+        </picture>
+      </td>
+      <td>
+        <div><code>dancer</code></div>
+        <picture>
+          <source media="(prefers-color-scheme: dark)" srcset="showcase_exports/12_group3_near_ood_dancer_dark.svg">
+          <source media="(prefers-color-scheme: light)" srcset="showcase_exports/12_group3_near_ood_dancer_light.svg">
+          <img alt="ASCII sketch for the prompt dancer" src="showcase_exports/12_group3_near_ood_dancer_light.svg">
+        </picture>
+      </td>
+    </tr>
+  </tbody>
+</table>
 
-`flower vase`
-
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="showcase_exports/10_group3_near_ood_flower-vase_dark.svg">
-  <source media="(prefers-color-scheme: light)" srcset="showcase_exports/10_group3_near_ood_flower-vase_light.svg">
-  <img alt="ASCII sketch for the prompt flower vase" src="showcase_exports/10_group3_near_ood_flower-vase_light.svg">
-</picture>
-
-`mushroom cloud`
-
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="showcase_exports/11_group3_near_ood_mushroom-cloud_dark.svg">
-  <source media="(prefers-color-scheme: light)" srcset="showcase_exports/11_group3_near_ood_mushroom-cloud_light.svg">
-  <img alt="ASCII sketch for the prompt mushroom cloud" src="showcase_exports/11_group3_near_ood_mushroom-cloud_light.svg">
-</picture>
-
-`dancer`
-
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="showcase_exports/12_group3_near_ood_dancer_dark.svg">
-  <source media="(prefers-color-scheme: light)" srcset="showcase_exports/12_group3_near_ood_dancer_light.svg">
-  <img alt="ASCII sketch for the prompt dancer" src="showcase_exports/12_group3_near_ood_dancer_light.svg">
-</picture>
-
-## How To Read The Results
-
-The examples above are meant to show four different behaviors:
-
-- **Direct matches**: prompts that are close to the training categories and tend to produce the strongest outputs
-- **Synonyms**: prompts that are not necessarily exact labels, but still preserve recognizable structure
-- **Near-OOD prompts**: prompts that are outside the exact training ontology but close enough to produce interesting approximations
-- **Failures and limitations**: not shown yet in the gallery, but these are important for understanding the model honestly
-
-Two examples are especially representative:
-
-- `bicycle` -> `bike`: evidence that the model is not just doing brittle exact-label recall
-- `storm`: evidence that the model can sometimes synthesize from nearby learned concepts like `hurricane`, `tornado`, and `cloud`
-
-The model can also produce partial conceptual blends such as `flower vase` and `mushroom cloud`, although composition is inconsistent.
-
-## What The Model Is Optimized For
+## Tradeoffs
 
 This project made a few deliberate tradeoffs:
 
@@ -175,42 +154,50 @@ This project made a few deliberate tradeoffs:
 - QuickDraw-style categories instead of open-ended natural images
 - prompt conditioning through CLIP rather than a larger text-native stack
 
-Those choices make the project lightweight enough to run locally, but they also bound what the outputs can become.
+Those choices make the model lightweight enough to run locally and strong on simple, iconic prompts. They also define its limits: it is best at single recognizable objects, reasonably good with related wording, and much weaker on complex scenes, spatial relations, abstraction, and fine detail. ASCII itself is part of the tradeoff too; the outputs look best in monospace contexts.
 
-## What It Can And Cannot Do
+## Weights
 
-What it does reasonably well:
+The model weights live on Hugging Face:
 
-- recognizable objects from in-distribution prompts
-- prompt sensitivity to alternate wording
-- approximate semantic generalization within a narrow ontology
+- [wmargin/ascii-doodle](https://huggingface.co/wmargin/ascii-doodle/tree/main)
 
-What it does poorly:
+Download these two files:
 
-- abstract prompts
-- complex scenes
-- spatial relations
-- reliable multi-object composition
-- anything that depends on high-frequency detail
+- `dit_vae_full_250m_step_60000.pt`
+- `vae_qd_full_b01_step_10000.pt`
 
-ASCII itself is also a real limitation: the outputs look best in monospace contexts, and copy/paste portability is fragile outside terminals, editors, and code blocks.
+Place them here:
 
-## Model And Sampling Defaults
+```text
+local_data/models/checkpoints/dit_vae_full_250m/step_60000.pt
+local_data/models/checkpoints/vae_qd_full_b01/step_10000.pt
+```
 
-Current default inference target:
+Manual download is simplest:
 
-- DiT: `local_data/models/checkpoints/dit_vae_full_250m/step_60000.pt`
-- VAE: `local_data/models/checkpoints/vae_qd_full_b01/step_10000.pt`
+1. Open the [model page](https://huggingface.co/wmargin/ascii-doodle/tree/main).
+2. Download both checkpoint files.
+3. Put them in the paths above.
 
-Best current demo settings:
+With the Hugging Face CLI:
 
-- `--sample-steps 50`
-- `--guidance-scale 10`
+```bash
+mkdir -p local_data/models/checkpoints/dit_vae_full_250m
+mkdir -p local_data/models/checkpoints/vae_qd_full_b01
 
-Those two parameters matter a lot:
+hf download wmargin/ascii-doodle dit_vae_full_250m_step_60000.pt \
+  --local-dir local_data/models/checkpoints/dit_vae_full_250m
 
-- more `sample_steps` usually improves structure and reduces undercooked noise
-- higher `guidance_scale` pushes harder toward the prompt, but can also make samples brittle
+hf download wmargin/ascii-doodle vae_qd_full_b01_step_10000.pt \
+  --local-dir local_data/models/checkpoints/vae_qd_full_b01
+
+mv local_data/models/checkpoints/dit_vae_full_250m/dit_vae_full_250m_step_60000.pt \
+  local_data/models/checkpoints/dit_vae_full_250m/step_60000.pt
+
+mv local_data/models/checkpoints/vae_qd_full_b01/vae_qd_full_b01_step_10000.pt \
+  local_data/models/checkpoints/vae_qd_full_b01/step_10000.pt
+```
 
 ## Running It
 
@@ -220,40 +207,25 @@ Install dependencies:
 pip install -r requirements.txt
 ```
 
-Run prompt-conditioned sampling:
+Recommended demo settings:
 
-```bash
-python sample_prompts.py --prompts "bicycle" "car" "storm"
-```
+- `--sample-steps 60`
+- `--guidance-scale 10`
 
-Use the recommended showcase settings:
+Example:
 
 ```bash
 python sample_prompts.py \
-  --sample-steps 50 \
+  --sample-steps 60 \
   --guidance-scale 10 \
-  --prompts "bike" "oak" "automobile" "mushroom cloud"
+  --prompts "bicycle" "bike" "storm" "mushroom cloud"
 ```
 
-## Exporting Gallery Assets
-
-The repo includes an exporter that writes:
-
-- raw `.txt` outputs
-- crisp text-based `.svg` assets for GitHub
-- a manifest with prompts, checkpoint, and sampling settings
-
-Generate the current showcase set:
-
-```bash
-python export_showcase.py --device cpu --sample-steps 50 --guidance-scale 10
-```
-
-Outputs are written to `showcase_exports/`.
+`sample_steps` and `guidance_scale` matter more than anything else at inference time: more steps usually improve structure, while higher guidance pushes harder toward the prompt but can make samples brittle.
 
 ## Training
 
-The repo is inference-first now, but the training path is still intact.
+The repo is centered on inference, but the training path is still included.
 
 Rebuild the QuickDraw dataset if needed:
 
@@ -274,31 +246,3 @@ python train_dit.py \
   --vae-checkpoint local_data/models/checkpoints/vae_qd_full_b01/step_10000.pt \
   --train-npy local_data/quickdraw/full_32x16
 ```
-
-## Weights
-
-Large checkpoints and datasets are not tracked in git.
-
-The intended split is:
-
-- keep code and showcase assets in GitHub
-- host model weights separately
-
-The `250m` checkpoint is the best demo model, but it is too large to treat as a normal git artifact. A Hugging Face model repo is the right home for it.
-
-Local experiments, checkpoints, and datasets live under `local_data/`, which is intentionally ignored.
-
-## Repo Structure
-
-- `sample_prompts.py`: prompt-conditioned local sampling
-- `export_showcase.py`: save showcase outputs as `.txt` and `.svg`
-- `inference.py`: load the default pretrained pipeline
-- `train_vae.py`: train the tokenizer VAE
-- `train_dit.py`: train the latent diffusion transformer
-- `build_quickdraw_full.py`: rebuild the QuickDraw dataset
-
-## Notes
-
-This project is best understood as a polished experiment in symbolic generative modeling.
-
-It is small, weird, technically real, and honest about its limits. That is the point.
