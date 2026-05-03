@@ -27,7 +27,6 @@ On prompts that are close to the 'Quick, Draw!' training distribution, the model
   <tbody>
     <tr>
       <td>
-        <div><code>bicycle</code></div>
         <picture>
           <source media="(prefers-color-scheme: dark)" srcset="showcase_exports/01_group1_direct_bicycle_dark.svg">
           <source media="(prefers-color-scheme: light)" srcset="showcase_exports/01_group1_direct_bicycle_light.svg">
@@ -35,7 +34,6 @@ On prompts that are close to the 'Quick, Draw!' training distribution, the model
         </picture>
       </td>
       <td>
-        <div><code>bike</code></div>
         <picture>
           <source media="(prefers-color-scheme: dark)" srcset="showcase_exports/05_group2_synonyms_bike_dark.svg">
           <source media="(prefers-color-scheme: light)" srcset="showcase_exports/05_group2_synonyms_bike_light.svg">
@@ -45,7 +43,6 @@ On prompts that are close to the 'Quick, Draw!' training distribution, the model
     </tr>
     <tr>
       <td>
-        <div><code>tree</code></div>
         <picture>
           <source media="(prefers-color-scheme: dark)" srcset="showcase_exports/02_group1_direct_tree_dark.svg">
           <source media="(prefers-color-scheme: light)" srcset="showcase_exports/02_group1_direct_tree_light.svg">
@@ -53,7 +50,6 @@ On prompts that are close to the 'Quick, Draw!' training distribution, the model
         </picture>
       </td>
       <td>
-        <div><code>oak</code></div>
         <picture>
           <source media="(prefers-color-scheme: dark)" srcset="showcase_exports/06_group2_synonyms_oak_dark.svg">
           <source media="(prefers-color-scheme: light)" srcset="showcase_exports/06_group2_synonyms_oak_light.svg">
@@ -63,7 +59,6 @@ On prompts that are close to the 'Quick, Draw!' training distribution, the model
     </tr>
     <tr>
       <td>
-        <div><code>car</code></div>
         <picture>
           <source media="(prefers-color-scheme: dark)" srcset="showcase_exports/03_group1_direct_car_dark.svg">
           <source media="(prefers-color-scheme: light)" srcset="showcase_exports/03_group1_direct_car_light.svg">
@@ -71,7 +66,6 @@ On prompts that are close to the 'Quick, Draw!' training distribution, the model
         </picture>
       </td>
       <td>
-        <div><code>automobile</code></div>
         <picture>
           <source media="(prefers-color-scheme: dark)" srcset="showcase_exports/07_group2_synonyms_automobile_dark.svg">
           <source media="(prefers-color-scheme: light)" srcset="showcase_exports/07_group2_synonyms_automobile_light.svg">
@@ -81,7 +75,6 @@ On prompts that are close to the 'Quick, Draw!' training distribution, the model
     </tr>
     <tr>
       <td>
-        <div><code>donut</code></div>
         <picture>
           <source media="(prefers-color-scheme: dark)" srcset="showcase_exports/04_group1_direct_donut_dark.svg">
           <source media="(prefers-color-scheme: light)" srcset="showcase_exports/04_group1_direct_donut_light.svg">
@@ -89,7 +82,6 @@ On prompts that are close to the 'Quick, Draw!' training distribution, the model
         </picture>
       </td>
       <td>
-        <div><code>doughnut</code></div>
         <picture>
           <source media="(prefers-color-scheme: dark)" srcset="showcase_exports/08_group2_synonyms_doughnut_dark.svg">
           <source media="(prefers-color-scheme: light)" srcset="showcase_exports/08_group2_synonyms_doughnut_light.svg">
@@ -108,7 +100,6 @@ On prompts that are close to the 'Quick, Draw!' training distribution, the model
   <tbody>
     <tr>
       <td>
-        <div><code>storm</code></div>
         <picture>
           <source media="(prefers-color-scheme: dark)" srcset="showcase_exports/09_group3_near_ood_storm_dark.svg">
           <source media="(prefers-color-scheme: light)" srcset="showcase_exports/09_group3_near_ood_storm_light.svg">
@@ -116,7 +107,6 @@ On prompts that are close to the 'Quick, Draw!' training distribution, the model
         </picture>
       </td>
       <td>
-        <div><code>flower vase</code></div>
         <picture>
           <source media="(prefers-color-scheme: dark)" srcset="showcase_exports/10_group3_near_ood_flower-vase_dark.svg">
           <source media="(prefers-color-scheme: light)" srcset="showcase_exports/10_group3_near_ood_flower-vase_light.svg">
@@ -126,7 +116,6 @@ On prompts that are close to the 'Quick, Draw!' training distribution, the model
     </tr>
     <tr>
       <td>
-        <div><code>mushroom cloud</code></div>
         <picture>
           <source media="(prefers-color-scheme: dark)" srcset="showcase_exports/11_group3_near_ood_mushroom-cloud_dark.svg">
           <source media="(prefers-color-scheme: light)" srcset="showcase_exports/11_group3_near_ood_mushroom-cloud_light.svg">
@@ -134,7 +123,6 @@ On prompts that are close to the 'Quick, Draw!' training distribution, the model
         </picture>
       </td>
       <td>
-        <div><code>dancer</code></div>
         <picture>
           <source media="(prefers-color-scheme: dark)" srcset="showcase_exports/12_group3_near_ood_dancer_dark.svg">
           <source media="(prefers-color-scheme: light)" srcset="showcase_exports/12_group3_near_ood_dancer_light.svg">
