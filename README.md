@@ -1,95 +1,120 @@
 # ASCII Generator
 
-`ASCII Generator` is a prompt-conditioned generative model for low-resolution ASCII sketches.
+`ASCII Generator` is a prompt-conditioned generative model for ASCII sketches.
 
-The final pipeline uses:
+It uses:
 
 - a VAE to compress `32x16` ASCII token grids
 - a CLIP-conditioned DiT to sample in the VAE latent space
 - a small inference stack that runs locally on CPU
 
-This repo is the cleaned-up end state of a learning project. It is not a product and it is not general text-to-image. It is a constrained, memorable ML demo built around a strange medium.
+The result is a compact text-to-ASCII pipeline that can produce recognizable doodles, preserve structure across related prompts, and occasionally generalize beyond the exact training labels.
 
 ## What It Does
 
-The model works best as **QuickDraw-style prompt-to-ASCII generation**:
+The model was trained on QuickDraw-style categories and performs best on simple, iconic objects. In practice, it can:
 
-- exact category prompts often produce recognizable structure
-- alternate wording sometimes preserves the same concept
-- nearby unseen prompts can land in the right semantic neighborhood
-- composition and abstraction are much less reliable
+- generate coherent ASCII sketches for many in-distribution prompts
+- stay surprisingly stable across synonyms and alternate wording
+- approximate nearby unseen prompts by recombining learned visual structure
+- produce interesting failures on composition, abstraction, and prompts far outside the training distribution
 
-The interesting result is not that ASCII is commercially useful. The interesting result is that a relatively compact latent diffusion pipeline can learn recognizable symbolic structure in an extremely low-resolution text domain.
+At its best, the project shows that even in a tiny symbolic image space, a latent diffusion pipeline can learn a usable visual prior.
+
+## Why It’s Interesting
+
+Most generative models operate in pixels. This one operates in text.
+
+That constraint makes the problem harder, but also more legible: every success and every failure is easy to inspect. The model has to learn shape, silhouette, and category structure in an extremely low-resolution medium where there is very little room to hide.
+
+What came out of that constraint is a system that is lightweight, visually distinctive, and technically real: trained end-to-end, prompt-conditioned, locally runnable, and good enough to produce genuinely memorable outputs.
 
 ## Showcase
 
-### Direct Matches
+### Direct Matches vs. Alternate Wording
 
-`bicycle`
-
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="showcase_exports/01_group1_direct_bicycle_dark.svg">
-  <source media="(prefers-color-scheme: light)" srcset="showcase_exports/01_group1_direct_bicycle_light.svg">
-  <img alt="ASCII sketch of a bicycle" src="showcase_exports/01_group1_direct_bicycle_light.svg">
-</picture>
-
-`tree`
-
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="showcase_exports/02_group1_direct_tree_dark.svg">
-  <source media="(prefers-color-scheme: light)" srcset="showcase_exports/02_group1_direct_tree_light.svg">
-  <img alt="ASCII sketch of a tree" src="showcase_exports/02_group1_direct_tree_light.svg">
-</picture>
-
-`car`
-
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="showcase_exports/03_group1_direct_car_dark.svg">
-  <source media="(prefers-color-scheme: light)" srcset="showcase_exports/03_group1_direct_car_light.svg">
-  <img alt="ASCII sketch of a car" src="showcase_exports/03_group1_direct_car_light.svg">
-</picture>
-
-`donut`
-
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="showcase_exports/04_group1_direct_donut_dark.svg">
-  <source media="(prefers-color-scheme: light)" srcset="showcase_exports/04_group1_direct_donut_light.svg">
-  <img alt="ASCII sketch of a donut" src="showcase_exports/04_group1_direct_donut_light.svg">
-</picture>
-
-### Synonyms And Alternate Wording
-
-`bike`
-
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="showcase_exports/05_group2_synonyms_bike_dark.svg">
-  <source media="(prefers-color-scheme: light)" srcset="showcase_exports/05_group2_synonyms_bike_light.svg">
-  <img alt="ASCII sketch of a bike" src="showcase_exports/05_group2_synonyms_bike_light.svg">
-</picture>
-
-`oak`
-
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="showcase_exports/06_group2_synonyms_oak_dark.svg">
-  <source media="(prefers-color-scheme: light)" srcset="showcase_exports/06_group2_synonyms_oak_light.svg">
-  <img alt="ASCII sketch of an oak tree" src="showcase_exports/06_group2_synonyms_oak_light.svg">
-</picture>
-
-`automobile`
-
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="showcase_exports/07_group2_synonyms_automobile_dark.svg">
-  <source media="(prefers-color-scheme: light)" srcset="showcase_exports/07_group2_synonyms_automobile_light.svg">
-  <img alt="ASCII sketch of an automobile" src="showcase_exports/07_group2_synonyms_automobile_light.svg">
-</picture>
-
-`doughnut`
-
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="showcase_exports/08_group2_synonyms_doughnut_dark.svg">
-  <source media="(prefers-color-scheme: light)" srcset="showcase_exports/08_group2_synonyms_doughnut_light.svg">
-  <img alt="ASCII sketch of a doughnut" src="showcase_exports/08_group2_synonyms_doughnut_light.svg">
-</picture>
+<table>
+  <thead>
+    <tr>
+      <th>Direct Match</th>
+      <th>Alternate Wording</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>
+        <div><code>bicycle</code></div>
+        <picture>
+          <source media="(prefers-color-scheme: dark)" srcset="showcase_exports/01_group1_direct_bicycle_dark.svg">
+          <source media="(prefers-color-scheme: light)" srcset="showcase_exports/01_group1_direct_bicycle_light.svg">
+          <img alt="ASCII sketch of a bicycle" src="showcase_exports/01_group1_direct_bicycle_light.svg">
+        </picture>
+      </td>
+      <td>
+        <div><code>bike</code></div>
+        <picture>
+          <source media="(prefers-color-scheme: dark)" srcset="showcase_exports/05_group2_synonyms_bike_dark.svg">
+          <source media="(prefers-color-scheme: light)" srcset="showcase_exports/05_group2_synonyms_bike_light.svg">
+          <img alt="ASCII sketch of a bike" src="showcase_exports/05_group2_synonyms_bike_light.svg">
+        </picture>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <div><code>tree</code></div>
+        <picture>
+          <source media="(prefers-color-scheme: dark)" srcset="showcase_exports/02_group1_direct_tree_dark.svg">
+          <source media="(prefers-color-scheme: light)" srcset="showcase_exports/02_group1_direct_tree_light.svg">
+          <img alt="ASCII sketch of a tree" src="showcase_exports/02_group1_direct_tree_light.svg">
+        </picture>
+      </td>
+      <td>
+        <div><code>oak</code></div>
+        <picture>
+          <source media="(prefers-color-scheme: dark)" srcset="showcase_exports/06_group2_synonyms_oak_dark.svg">
+          <source media="(prefers-color-scheme: light)" srcset="showcase_exports/06_group2_synonyms_oak_light.svg">
+          <img alt="ASCII sketch of an oak tree" src="showcase_exports/06_group2_synonyms_oak_light.svg">
+        </picture>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <div><code>car</code></div>
+        <picture>
+          <source media="(prefers-color-scheme: dark)" srcset="showcase_exports/03_group1_direct_car_dark.svg">
+          <source media="(prefers-color-scheme: light)" srcset="showcase_exports/03_group1_direct_car_light.svg">
+          <img alt="ASCII sketch of a car" src="showcase_exports/03_group1_direct_car_light.svg">
+        </picture>
+      </td>
+      <td>
+        <div><code>automobile</code></div>
+        <picture>
+          <source media="(prefers-color-scheme: dark)" srcset="showcase_exports/07_group2_synonyms_automobile_dark.svg">
+          <source media="(prefers-color-scheme: light)" srcset="showcase_exports/07_group2_synonyms_automobile_light.svg">
+          <img alt="ASCII sketch of an automobile" src="showcase_exports/07_group2_synonyms_automobile_light.svg">
+        </picture>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <div><code>donut</code></div>
+        <picture>
+          <source media="(prefers-color-scheme: dark)" srcset="showcase_exports/04_group1_direct_donut_dark.svg">
+          <source media="(prefers-color-scheme: light)" srcset="showcase_exports/04_group1_direct_donut_light.svg">
+          <img alt="ASCII sketch of a donut" src="showcase_exports/04_group1_direct_donut_light.svg">
+        </picture>
+      </td>
+      <td>
+        <div><code>doughnut</code></div>
+        <picture>
+          <source media="(prefers-color-scheme: dark)" srcset="showcase_exports/08_group2_synonyms_doughnut_dark.svg">
+          <source media="(prefers-color-scheme: light)" srcset="showcase_exports/08_group2_synonyms_doughnut_light.svg">
+          <img alt="ASCII sketch of a doughnut" src="showcase_exports/08_group2_synonyms_doughnut_light.svg">
+        </picture>
+      </td>
+    </tr>
+  </tbody>
+</table>
 
 ### Near-OOD Prompts
 
