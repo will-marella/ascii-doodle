@@ -46,7 +46,14 @@ def write_text_sample(path: Path, prompt: str, ascii_art: str) -> None:
     path.write_text(f'prompt: {prompt}\n\n{ascii_art}\n', encoding='utf-8')
 
 
-def write_svg_sample(path: Path, prompt: str, ascii_art: str) -> None:
+def write_svg_sample(
+    path: Path,
+    prompt: str,
+    ascii_art: str,
+    background: str,
+    title_color: str,
+    text_color: str,
+) -> None:
     lines = ascii_art.splitlines()
     max_cols = max(len(line) for line in lines) if lines else 0
 
@@ -70,9 +77,9 @@ def write_svg_sample(path: Path, prompt: str, ascii_art: str) -> None:
     tspans_str = ''.join(tspans)
 
     svg = f'''<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}" role="img" aria-label="{title}">
-  <rect width="100%" height="100%" fill="#f6f2e8" />
-  <text x="{padding_x}" y="{padding_y}" font-family="'SFMono-Regular', Menlo, Monaco, Consolas, 'Liberation Mono', monospace" font-size="20" font-weight="700" fill="#3a2f1f">{title}</text>
-  <text x="{padding_x}" y="{padding_y + title_gap}" xml:space="preserve" font-family="'SFMono-Regular', Menlo, Monaco, Consolas, 'Liberation Mono', monospace" font-size="{font_size}" fill="#111111">{tspans_str}</text>
+  <rect width="100%" height="100%" fill="{background}" />
+  <text x="{padding_x}" y="{padding_y}" font-family="'SFMono-Regular', Menlo, Monaco, Consolas, 'Liberation Mono', monospace" font-size="20" font-weight="700" fill="{title_color}">{title}</text>
+  <text x="{padding_x}" y="{padding_y + title_gap}" xml:space="preserve" font-family="'SFMono-Regular', Menlo, Monaco, Consolas, 'Liberation Mono', monospace" font-size="{font_size}" fill="{text_color}">{tspans_str}</text>
 </svg>
 '''
     path.write_text(svg, encoding='utf-8')
@@ -129,15 +136,32 @@ def main(argv: list[str] | None = None) -> None:
             sample_steps=args.sample_steps,
         )
         txt_path = outdir / f'{stem}.txt'
-        svg_path = outdir / f'{stem}.svg'
+        svg_light_path = outdir / f'{stem}_light.svg'
+        svg_dark_path = outdir / f'{stem}_dark.svg'
         write_text_sample(txt_path, prompt, ascii_art)
-        write_svg_sample(svg_path, prompt, ascii_art)
+        write_svg_sample(
+            svg_light_path,
+            prompt,
+            ascii_art,
+            background='#f6f2e8',
+            title_color='#3a2f1f',
+            text_color='#111111',
+        )
+        write_svg_sample(
+            svg_dark_path,
+            prompt,
+            ascii_art,
+            background='#0d1117',
+            title_color='#f0d9b5',
+            text_color='#f5f5f5',
+        )
         manifest['samples'].append({
             'index': index,
             'group': group,
             'prompt': prompt,
             'txt': txt_path.name,
-            'svg': svg_path.name,
+            'svg_light': svg_light_path.name,
+            'svg_dark': svg_dark_path.name,
         })
         print(f'[{index:02d}/{len(samples):02d}] saved {prompt!r}')
 

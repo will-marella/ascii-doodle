@@ -27,55 +27,103 @@ The interesting result is not that ASCII is commercially useful. The interesting
 
 `bicycle`
 
-![bicycle](showcase_exports/01_group1_direct_bicycle.svg)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="showcase_exports/01_group1_direct_bicycle_dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="showcase_exports/01_group1_direct_bicycle_light.svg">
+  <img alt="ASCII sketch of a bicycle" src="showcase_exports/01_group1_direct_bicycle_light.svg">
+</picture>
 
 `tree`
 
-![tree](showcase_exports/02_group1_direct_tree.svg)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="showcase_exports/02_group1_direct_tree_dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="showcase_exports/02_group1_direct_tree_light.svg">
+  <img alt="ASCII sketch of a tree" src="showcase_exports/02_group1_direct_tree_light.svg">
+</picture>
 
 `car`
 
-![car](showcase_exports/03_group1_direct_car.svg)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="showcase_exports/03_group1_direct_car_dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="showcase_exports/03_group1_direct_car_light.svg">
+  <img alt="ASCII sketch of a car" src="showcase_exports/03_group1_direct_car_light.svg">
+</picture>
 
 `donut`
 
-![donut](showcase_exports/04_group1_direct_donut.svg)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="showcase_exports/04_group1_direct_donut_dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="showcase_exports/04_group1_direct_donut_light.svg">
+  <img alt="ASCII sketch of a donut" src="showcase_exports/04_group1_direct_donut_light.svg">
+</picture>
 
 ### Synonyms And Alternate Wording
 
 `bike`
 
-![bike](showcase_exports/05_group2_synonyms_bike.svg)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="showcase_exports/05_group2_synonyms_bike_dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="showcase_exports/05_group2_synonyms_bike_light.svg">
+  <img alt="ASCII sketch of a bike" src="showcase_exports/05_group2_synonyms_bike_light.svg">
+</picture>
 
 `oak`
 
-![oak](showcase_exports/06_group2_synonyms_oak.svg)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="showcase_exports/06_group2_synonyms_oak_dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="showcase_exports/06_group2_synonyms_oak_light.svg">
+  <img alt="ASCII sketch of an oak tree" src="showcase_exports/06_group2_synonyms_oak_light.svg">
+</picture>
 
 `automobile`
 
-![automobile](showcase_exports/07_group2_synonyms_automobile.svg)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="showcase_exports/07_group2_synonyms_automobile_dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="showcase_exports/07_group2_synonyms_automobile_light.svg">
+  <img alt="ASCII sketch of an automobile" src="showcase_exports/07_group2_synonyms_automobile_light.svg">
+</picture>
 
 `doughnut`
 
-![doughnut](showcase_exports/08_group2_synonyms_doughnut.svg)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="showcase_exports/08_group2_synonyms_doughnut_dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="showcase_exports/08_group2_synonyms_doughnut_light.svg">
+  <img alt="ASCII sketch of a doughnut" src="showcase_exports/08_group2_synonyms_doughnut_light.svg">
+</picture>
 
 ### Near-OOD Prompts
 
 `storm`
 
-![storm](showcase_exports/09_group3_near_ood_storm.svg)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="showcase_exports/09_group3_near_ood_storm_dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="showcase_exports/09_group3_near_ood_storm_light.svg">
+  <img alt="ASCII sketch for the prompt storm" src="showcase_exports/09_group3_near_ood_storm_light.svg">
+</picture>
 
 `flower vase`
 
-![flower vase](showcase_exports/10_group3_near_ood_flower-vase.svg)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="showcase_exports/10_group3_near_ood_flower-vase_dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="showcase_exports/10_group3_near_ood_flower-vase_light.svg">
+  <img alt="ASCII sketch for the prompt flower vase" src="showcase_exports/10_group3_near_ood_flower-vase_light.svg">
+</picture>
 
 `mushroom cloud`
 
-![mushroom cloud](showcase_exports/11_group3_near_ood_mushroom-cloud.svg)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="showcase_exports/11_group3_near_ood_mushroom-cloud_dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="showcase_exports/11_group3_near_ood_mushroom-cloud_light.svg">
+  <img alt="ASCII sketch for the prompt mushroom cloud" src="showcase_exports/11_group3_near_ood_mushroom-cloud_light.svg">
+</picture>
 
 `dancer`
 
-![dancer](showcase_exports/12_group3_near_ood_dancer.svg)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="showcase_exports/12_group3_near_ood_dancer_dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="showcase_exports/12_group3_near_ood_dancer_light.svg">
+  <img alt="ASCII sketch for the prompt dancer" src="showcase_exports/12_group3_near_ood_dancer_light.svg">
+</picture>
 
 ## How To Read The Results
 
