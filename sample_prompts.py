@@ -36,6 +36,7 @@ def main(argv=None):
             prompt,
             guidance_scale=args.guidance_scale,
             sample_steps=args.sample_steps,
+            seed=args.seed,
         )
         print(f'--- {prompt} ---')
         for line in ascii_art.split('\n'):

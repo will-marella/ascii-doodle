@@ -101,6 +101,7 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument('--device', default=None)
     parser.add_argument('--guidance-scale', type=float, default=10.0)
     parser.add_argument('--sample-steps', type=int, default=50)
+    parser.add_argument('--seed', type=int, default=42)
     parser.add_argument('--prompts', nargs='*', default=None,
                         help='Optional flat prompt list. If omitted, use built-in grouped prompts.')
     args = parser.parse_args(argv)
@@ -124,16 +125,19 @@ def main(argv: list[str] | None = None) -> None:
         'vae_checkpoint': args.vae_checkpoint,
         'guidance_scale': args.guidance_scale,
         'sample_steps': args.sample_steps,
+        'base_seed': args.seed,
         'samples': [],
     }
 
     for index, (group, prompt) in enumerate(samples, start=1):
         stem = f'{index:02d}_{group}_{slugify(prompt)}'
+        sample_seed = args.seed + index - 1
         ascii_art = generate_ascii(
             pipeline,
             prompt,
             guidance_scale=args.guidance_scale,
             sample_steps=args.sample_steps,
+            seed=sample_seed,
         )
         txt_path = outdir / f'{stem}.txt'
         svg_light_path = outdir / f'{stem}_light.svg'
@@ -159,6 +163,7 @@ def main(argv: list[str] | None = None) -> None:
             'index': index,
             'group': group,
             'prompt': prompt,
+            'seed': sample_seed,
             'txt': txt_path.name,
             'svg_light': svg_light_path.name,
             'svg_dark': svg_dark_path.name,

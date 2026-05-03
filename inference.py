@@ -90,8 +90,14 @@ def generate_ascii(
     guidance_scale: float = 10.0,
     sample_steps: int = 50,
     prompt_prefix: str = PROMPT_PREFIX,
+    seed: int | None = None,
 ) -> str:
     """Generate ASCII art for a single prompt."""
+    if seed is not None:
+        torch.manual_seed(seed)
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed_all(seed)
+
     clip_emb = text_to_clip_embeddings(
         [f'{prompt_prefix}{prompt}'],
         device=torch.device(pipeline.device),

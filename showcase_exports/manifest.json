@@ -1,92 +1,117 @@
 {
-  "checkpoint": "checkpoints/dit_vae_full_250m/step_60000.pt",
-  "vae_checkpoint": "checkpoints/vae_qd_full_b01/step_10000.pt",
+  "checkpoint": "local_data/models/checkpoints/dit_vae_full_250m/step_60000.pt",
+  "vae_checkpoint": "local_data/models/checkpoints/vae_qd_full_b01/step_10000.pt",
   "guidance_scale": 10.0,
-  "sample_steps": 50,
+  "sample_steps": 60,
+  "base_seed": 42,
   "samples": [
     {
       "index": 1,
       "group": "group1_direct",
       "prompt": "bicycle",
+      "seed": 42,
       "txt": "01_group1_direct_bicycle.txt",
-      "svg": "01_group1_direct_bicycle.svg"
+      "svg_light": "01_group1_direct_bicycle_light.svg",
+      "svg_dark": "01_group1_direct_bicycle_dark.svg"
     },
     {
       "index": 2,
       "group": "group1_direct",
       "prompt": "tree",
+      "seed": 43,
       "txt": "02_group1_direct_tree.txt",
-      "svg": "02_group1_direct_tree.svg"
+      "svg_light": "02_group1_direct_tree_light.svg",
+      "svg_dark": "02_group1_direct_tree_dark.svg"
     },
     {
       "index": 3,
       "group": "group1_direct",
       "prompt": "car",
+      "seed": 44,
       "txt": "03_group1_direct_car.txt",
-      "svg": "03_group1_direct_car.svg"
+      "svg_light": "03_group1_direct_car_light.svg",
+      "svg_dark": "03_group1_direct_car_dark.svg"
     },
     {
       "index": 4,
       "group": "group1_direct",
       "prompt": "donut",
+      "seed": 45,
       "txt": "04_group1_direct_donut.txt",
-      "svg": "04_group1_direct_donut.svg"
+      "svg_light": "04_group1_direct_donut_light.svg",
+      "svg_dark": "04_group1_direct_donut_dark.svg"
     },
     {
       "index": 5,
       "group": "group2_synonyms",
       "prompt": "bike",
+      "seed": 46,
       "txt": "05_group2_synonyms_bike.txt",
-      "svg": "05_group2_synonyms_bike.svg"
+      "svg_light": "05_group2_synonyms_bike_light.svg",
+      "svg_dark": "05_group2_synonyms_bike_dark.svg"
     },
     {
       "index": 6,
       "group": "group2_synonyms",
       "prompt": "oak",
+      "seed": 47,
       "txt": "06_group2_synonyms_oak.txt",
-      "svg": "06_group2_synonyms_oak.svg"
+      "svg_light": "06_group2_synonyms_oak_light.svg",
+      "svg_dark": "06_group2_synonyms_oak_dark.svg"
     },
     {
       "index": 7,
       "group": "group2_synonyms",
       "prompt": "automobile",
+      "seed": 48,
       "txt": "07_group2_synonyms_automobile.txt",
-      "svg": "07_group2_synonyms_automobile.svg"
+      "svg_light": "07_group2_synonyms_automobile_light.svg",
+      "svg_dark": "07_group2_synonyms_automobile_dark.svg"
     },
     {
       "index": 8,
       "group": "group2_synonyms",
       "prompt": "doughnut",
+      "seed": 49,
       "txt": "08_group2_synonyms_doughnut.txt",
-      "svg": "08_group2_synonyms_doughnut.svg"
+      "svg_light": "08_group2_synonyms_doughnut_light.svg",
+      "svg_dark": "08_group2_synonyms_doughnut_dark.svg"
     },
     {
       "index": 9,
       "group": "group3_near_ood",
       "prompt": "storm",
+      "seed": 50,
       "txt": "09_group3_near_ood_storm.txt",
-      "svg": "09_group3_near_ood_storm.svg"
+      "svg_light": "09_group3_near_ood_storm_light.svg",
+      "svg_dark": "09_group3_near_ood_storm_dark.svg"
     },
     {
       "index": 10,
       "group": "group3_near_ood",
       "prompt": "flower vase",
+      "seed": 51,
       "txt": "10_group3_near_ood_flower-vase.txt",
-      "svg": "10_group3_near_ood_flower-vase.svg"
+      "svg_light": "10_group3_near_ood_flower-vase_light.svg",
+      "svg_dark": "10_group3_near_ood_flower-vase_dark.svg"
     },
     {
       "index": 11,
       "group": "group3_near_ood",
       "prompt": "mushroom cloud",
+      "seed": 52,
       "txt": "11_group3_near_ood_mushroom-cloud.txt",
-      "svg": "11_group3_near_ood_mushroom-cloud.svg"
+      "svg_light": "11_group3_near_ood_mushroom-cloud_light.svg",
+      "svg_dark": "11_group3_near_ood_mushroom-cloud_dark.svg"
     },
     {
       "index": 12,
       "group": "group3_near_ood",
       "prompt": "dancer",
+      "seed": 53,
       "txt": "12_group3_near_ood_dancer.txt",
-      "svg": "12_group3_near_ood_dancer.svg"
+      "svg_light": "12_group3_near_ood_dancer_light.svg",
+      "svg_dark": "12_group3_near_ood_dancer_dark.svg"
     }
   ]
 }
